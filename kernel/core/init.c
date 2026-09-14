@@ -159,8 +159,14 @@ int __init kernelsu_init(void)
         pr_info("late load mode, skipping kprobe hooks\n");
 
         apply_kernelsu_rules();
-        cache_sid();
-        setup_ksu_cred();
+
+// Force enable SELinux hide for temporary / late-load root
+ksu_selinux_hide_force_enable_late_load();
+
+cache_sid();
+setup_ksu_cred();
+      
+       
 
         // Grant current process (ksud late-load) root
         // with KSU SELinux domain before enforcing SELinux, so it
