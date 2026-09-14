@@ -1142,5 +1142,33 @@ out:
 allow:
     avd->allowed = 0xffffffff;
     goto out;
+}/* Force enable SELinux hide for late-load / temporary root.
+ * Called from kernelsu_init() after apply_kernelsu_rules().
+ */
+void ksu_selinux_hide_force_enable_late_load(void)
+{
+    int ret;
+
+    if (!ksu_late_loaded)
+        return;
+
+    mutex_lock(&selinux_hide_mutex);
+
+    if (ksu_selinux_hide_running) {
+        pr_info("selinux_hide: already running, skip force enable\n");
+        mutex_unlock(&selinux_hide_mutex);
+        return;
+    }
+
+    ret = ksu_selinux_hide_enable();
+    if (ret) {
+        pr_err("selinux_hide: force-enable failed: %d\n", ret);
+    } else {
+        ksu_selinux_hide_enabled = true;
+        ksu_selinux_hide_running = true;
+        pr_info("selinux_hide: force-enabled successfully in late-load\n");
+    }
+
+    mutex_unlock(&selinux_hide_mutex);
 }
 #endif
